@@ -29,7 +29,7 @@ locations:
 - # A second location you want to search in 
 
 uploads:
- Resume: # PATH TO Resume 
+ Resume: bryant-mejia-software-engineer-0503.docx
  Cover Letter: # PATH TO cover letter
  Photo: # PATH TO photo
 # Note file_key:file_paths contained inside the uploads section should be writted without a dash ('-') 

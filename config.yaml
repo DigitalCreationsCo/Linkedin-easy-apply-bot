@@ -1,20 +1,25 @@
-username: 
-password: 
-phone_number:
-
+username: bryantmejia242@gmail.com
+password: humanBeingExcellence2024
+# username: art.bryantfeed@gmail.com
+# password: newaccount123
+# username: bmejia220@gmail.com
+# password: Krxpjhs)#JCD2ax
+phone_number: 5707901185
 positions:
-- Data Scientist
-- # Another position you want to search for
-- # A third position you want to search for
+- Senior Software Engineer
+- Software Engineer
+- Full Stack Developer
+- Backend Engineer
+- Nodejs
 
 locations:
 - Remote
-- # A second location you want to search in 
+- New York
 
 # --------- Optional Parameters -------
-# uploads:
-#  Resume: # PATH TO Resume 
-#  Cover Letter: # PATH TO cover letter
+uploads:
+ Resume: '/Users/vibrantceo/easy-apply-bot/bryant-mejia-software-engineer-07012024.docx'
+ Cover Letter: '/Users/vibrantceo/easy-apply-bot/cover-letter.rtf'
 #  Photo: # PATH TO photo
 
 
@@ -24,5 +29,5 @@ locations:
 # blacklist:
 # - # Company names you want to ignore
 
-#blackListTitles:
-#- # Add job titles you want to ignore
+blackListTitles:
+- Data Scientist

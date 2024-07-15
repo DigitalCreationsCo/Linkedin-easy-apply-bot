@@ -22,7 +22,6 @@ from datetime import datetime, timedelta
 log = logging.getLogger(__name__)
 driver = webdriver.Chrome(ChromeDriverManager().install())
 
-
 def setupLogger() -> None:
     dt: str = datetime.strftime(datetime.now(), "%m_%d_%y %H_%M_%S ")
 
@@ -39,11 +38,13 @@ def setupLogger() -> None:
     c_handler.setFormatter(c_format)
     log.addHandler(c_handler)
 
-
 class EasyApplyBot:
     setupLogger()
     # MAX_SEARCH_TIME is 10 hours by default, feel free to modify it
     MAX_SEARCH_TIME = 10 * 60 * 60
+    MAX_SIGN_IN_ATTEMPTS = 3
+    username: str
+    password: str
 
     def __init__(self,
                  username,
@@ -58,6 +59,8 @@ class EasyApplyBot:
         dirpath: str = os.getcwd()
         log.info("current directory is : " + dirpath)
 
+        self.username = username
+        self.password = password
         self.uploads = uploads
         past_ids: list | None = self.get_appliedIDs(filename)
         self.appliedJobIDs: list = past_ids if past_ids != None else []
@@ -99,13 +102,18 @@ class EasyApplyBot:
         options.add_argument("--disable-blink-features=AutomationControlled")
         return options
 
-    def start_linkedin(self, username, password) -> None:
+    def start_linkedin(self, username, password, attempt=1) -> None:
+
+        if attempt > self.MAX_SIGN_IN_ATTEMPTS:
+            print("Max login attempts reached. Exiting.")
+            return
+    
         log.info("Logging in.....Please wait :)  ")
         self.browser.get("https://www.linkedin.com/login?trk=guest_homepage-basic_nav-header-signin")
         try:
             user_field = self.browser.find_element("id","username")
             pw_field = self.browser.find_element("id","password")
-            login_button = self.browser.find_element("xpath",
+            login_button = self.browser.find_element(By.XPATH,
                         '//*[@id="organic-div"]/form/div[3]/button')
             user_field.send_keys(username)
             user_field.send_keys(Keys.TAB)
@@ -114,6 +122,24 @@ class EasyApplyBot:
             time.sleep(2)
             login_button.click()
             time.sleep(3)
+
+             # Check if login was successful, if not, retry
+            if "feed" not in self.browser.current_url:  # Assuming "feed" is in the URL after successful login
+
+                # Pause for manual security check
+                print("Please complete the security check manually and press Enter to continue...")
+                input("Press Enter to continue...")
+
+                time.sleep(3)
+                # After completing the security check manually, the script will resume here
+                # Verify if the login was successful
+                if "feed" in self.browser.current_url:
+                    print("Login successful.")
+                else:
+                    print("Login failed. Please try again.")
+                    self.start_linkedin(self.username, self.password, attempt + 1)
+            else:
+                print("Login successful.")
         except TimeoutException:
             log.info("TimeoutException! Username/password field or login button not found")
 
@@ -140,8 +166,6 @@ class EasyApplyBot:
             if len(combos) > 500:
                 break
 
-    # self.finish_apply() --> this does seem to cause more harm than good, since it closes the browser which we usually don't want, other conditions will stop the loop and just break out
-
     def applications_loop(self, position, location):
 
         count_application = 0
@@ -165,15 +189,6 @@ class EasyApplyBot:
                 log.debug(f"Sleeping for {round(randoTime, 1)}")
                 time.sleep(randoTime)
                 self.load_page(sleep=1)
-
-                # LinkedIn displays the search results in a scrollable <div> on the left side, we have to scroll to its bottom
-
-                # scrollresults = self.browser.find_element(By.CLASS_NAME,
-                #     "jobs-search-results-list"
-                # )
-                # Selenium only detects visible elements; if we scroll to the bottom too fast, only 8-9 results will be loaded into IDs list
-                # for i in range(300, 3000, 100):
-                #     self.browser.execute_script("arguments[0].scrollTo(0, {})".format(i), scrollresults)
 
                 time.sleep(1)
 
@@ -223,7 +238,7 @@ class EasyApplyBot:
                     # word filter to skip positions not wanted
 
                     if button is not False:
-                        if any(word in self.browser.title for word in blackListTitles):
+                        if any(word in self.browser.title for word in self.blackListTitles):
                             log.info('skipping this application, a blacklisted keyword was found in the job position')
                             string_easy = "* Contains blacklisted keyword"
                             result = False
@@ -293,11 +308,12 @@ class EasyApplyBot:
 
     def get_easy_apply_button(self):
         try:
-            button = self.browser.find_elements("xpath",
+            button = self.browser.find_elements(By.XPATH,
                 '//button[contains(@class, "jobs-apply-button")]'
             )
-
-            EasyApplyButton = button[0]
+            print('buttons found: ', button)
+            EasyApplyButton =  button[1] if len(button) > 1 else button[0] if len(button) > 0 else False
+            # EasyApplyButton = button[0]
             
         except Exception as e: 
             print("Exception:",e)
@@ -309,7 +325,6 @@ class EasyApplyBot:
         def is_present(button_locator) -> bool:
             return len(self.browser.find_elements(button_locator[0],
                                                   button_locator[1])) > 0
-        # try:
         next_locater = (By.CSS_SELECTOR,
                         "button[aria-label='Continue to next step']")
 
@@ -327,7 +342,7 @@ class EasyApplyBot:
             error_locator = (By.CSS_SELECTOR,
                              "p[data-test-form-element-error-message='true']")
 
-            # Click Next or submitt button if possible
+            # Click Next or submit button if possible
             button: None = None
             if is_present(next_locater):
                 button: None = self.wait.until(EC.element_to_be_clickable(next_locater))
@@ -361,6 +376,11 @@ class EasyApplyBot:
 
         try:
             time.sleep(random.uniform(1.5, 2.5))
+            
+            questions_heading_locator = (By.XPATH, "//form//h3[contains(text(), 'Additional Questions')]")
+            
+            work_authorization_heading_locator = (By.XPATH, "//form//h3[contains(text(), 'Work authorization')]")
+            
             next_locater = (By.CSS_SELECTOR,
                             "button[aria-label='Continue to next step']")
             review_locater = (By.CSS_SELECTOR,
@@ -371,35 +391,36 @@ class EasyApplyBot:
                                           "button[aria-label='Submit application']")
             error_locator = (By.CSS_SELECTOR,
                              "p[data-test-form-element-error-message='true']")
-            upload_locator = upload_locator = (By.CSS_SELECTOR, "button[aria-label='DOC, DOCX, PDF formats only (5 MB).']")
+            upload_locator = upload_locator = (By.XPATH, "//*[contains(@aria-label, 'DOC, DOCX, PDF formats are supported. Max file size is (2 MB)')]")
             follow_locator = (By.CSS_SELECTOR, "label[for='follow-company-checkbox']")
 
             submitted = False
             while True:
+                log.info(f"upload locator is present: {is_present(upload_locator)}")
 
-                # Upload Cover Letter if possible
                 if is_present(upload_locator):
 
                     input_buttons = self.browser.find_elements(upload_locator[0],
                                                                upload_locator[1])
+                    
+                    log.info(f"input_buttons: {input_buttons}")
                     for input_button in input_buttons:
-                        parent = input_button.find_element(By.XPATH, "..")
-                        sibling = parent.find_element(By.XPATH, "preceding-sibling::*[1]")
-                        grandparent = sibling.find_element(By.XPATH, "..")
+                        descendant_input = input_button.find_element(By.XPATH, "../..//input")
+                        log.info(f"descendant_input: {descendant_input}")
                         for key in self.uploads.keys():
-                            sibling_text = sibling.text
-                            gparent_text = grandparent.text
-                            if key.lower() in sibling_text.lower() or key in gparent_text.lower():
-                                input_button.send_keys(self.uploads[key])
+                            if key.lower() in descendant_input.get_attribute('id').lower():
+                                descendant_input.send_keys(self.uploads[key])
 
-                    # input_button[0].send_keys(self.cover_letter_loctn)
                     time.sleep(random.uniform(4.5, 6.5))
 
-                # Click Next or submitt button if possible
+                # Click Next or submit button if possible
                 button: None = None
                 buttons: list = [next_locater, review_locater, follow_locator,
                            submit_locater, submit_application_locator]
                 for i, button_locator in enumerate(buttons):
+
+                    self.answer_questions()
+                
                     if is_present(button_locator):
                         button: None = self.wait.until(EC.element_to_be_clickable(button_locator))
 
@@ -411,11 +432,17 @@ class EasyApplyBot:
                                 button = None
                                 break
                     if button:
+                        
+                        print(f"button found: {buttons[i]}")
+
                         button.click()
+                        print(f"Clicked button {buttons[i]}")
+
                         time.sleep(random.uniform(1.5, 2.5))
                         if i in (3, 4):
                             submitted = True
                         if i != 2:
+                            print(f"break at {buttons[i]}")
                             break
                 if button == None:
                     log.info("Could not complete submission")
@@ -424,8 +451,7 @@ class EasyApplyBot:
                     log.info("Application Submitted")
                     break
 
-            time.sleep(random.uniform(1.5, 2.5))
-
+                time.sleep(random.uniform(1.5, 2.5))
 
         except Exception as e:
             log.info(e)
@@ -433,6 +459,44 @@ class EasyApplyBot:
             raise (e)
 
         return submitted
+    
+    def answer_questions(self):
+        time.sleep(random.uniform(1.5, 2.5))
+
+        questions = self.browser.find_elements(By.XPATH, "//*[contains(@class, 'jobs-easy-apply-form-element')]")
+        log.info(f"Found {len(questions)} questions")
+        
+        for question in questions:
+            try:
+                label = question.find_element(By.XPATH, ".//label")
+                log.info(f"Answering question: {label.text}")
+
+                input_element = question.find_element(By.XPATH, f".//*[@id='{label.get_attribute('for')}']")
+                log.info(f"Input type: {input_element.tag_name}")
+
+                if "years" in label.text.lower():
+                    input_element.send_keys("5")
+                elif input_element.tag_name == "select":
+                    options = input_element.find_elements(By.TAG_NAME, "option")
+                    for option in options:
+                        if "yes" in option.text.lower():
+                            option.click()
+                            break
+                elif input_element.tag_name == "input" and input_element.get_attribute("type") == "radio":
+                    radio_buttons = question.find_elements(By.XPATH, ".//input[@type='radio']")
+                    for radio_button in radio_buttons:
+                        if radio_button.get_attribute("value").lower() == "yes":
+                            radio_button.click()
+                            break
+                else:
+                    log.info(f"Skipping question: {label.text}")
+
+                time.sleep(random.uniform(4.5, 6.5))
+            except Exception as e:
+                log.error(f"Error processing question: {str(e)}")
+                continue
+            
+            time.sleep(random.uniform(2.0, 4.5))
 
     def load_page(self, sleep=1):
         scroll_page = 0
@@ -469,47 +533,3 @@ class EasyApplyBot:
 
     def finish_apply(self) -> None:
         self.browser.close()
-
-
-if __name__ == '__main__':
-
-    with open("config.yaml", 'r') as stream:
-        try:
-            parameters = yaml.safe_load(stream)
-        except yaml.YAMLError as exc:
-            raise exc
-
-    assert len(parameters['positions']) > 0
-    assert len(parameters['locations']) > 0
-    assert parameters['username'] is not None
-    assert parameters['password'] is not None
-    assert parameters['phone_number'] is not None
-
-    if 'uploads' in parameters.keys() and type(parameters['uploads']) == list:
-        raise Exception("uploads read from the config file appear to be in list format" +
-                        " while should be dict. Try removing '-' from line containing" +
-                        " filename & path")
-
-    log.info({k: parameters[k] for k in parameters.keys() if k not in ['username', 'password']})
-
-    output_filename: list = [f for f in parameters.get('output_filename', ['output.csv']) if f != None]
-    output_filename: list = output_filename[0] if len(output_filename) > 0 else 'output.csv'
-    blacklist = parameters.get('blacklist', [])
-    blackListTitles = parameters.get('blackListTitles', [])
-
-    uploads = {} if parameters.get('uploads', {}) == None else parameters.get('uploads', {})
-    for key in uploads.keys():
-        assert uploads[key] != None
-
-    bot = EasyApplyBot(parameters['username'],
-                       parameters['password'],
-                       parameters['phone_number'],
-                       uploads=uploads,
-                       filename=output_filename,
-                       blacklist=blacklist,
-                       blackListTitles=blackListTitles
-                       )
-
-    locations: list = [l for l in parameters['locations'] if l != None]
-    positions: list = [p for p in parameters['positions'] if p != None]
-    bot.start_apply(positions, locations)
