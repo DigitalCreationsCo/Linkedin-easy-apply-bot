@@ -49,6 +49,15 @@ class EasyApplyBot:
     def __init__(self,
                  username,
                  password,
+                 first_name,
+                 last_name,
+                 salary,
+                 experience,
+                 address,
+                 city,
+                 state,
+                 zipcode,
+                 country,
                  phone_number,
                  uploads={},
                  filename='output.csv',
@@ -61,6 +70,17 @@ class EasyApplyBot:
 
         self.username = username
         self.password = password
+        self.first_name = first_name
+        self.last_name = last_name
+        self.salary = salary
+        self.experience = experience
+        self.address = address
+        self.city = city
+        self.state = state
+        self.zipcode = zipcode
+        self.country = country
+        self.phone_number = phone_number
+
         self.uploads = uploads
         past_ids: list | None = self.get_appliedIDs(filename)
         self.appliedJobIDs: list = past_ids if past_ids != None else []
@@ -71,12 +91,11 @@ class EasyApplyBot:
         self.blacklist = blacklist
         self.blackListTitles = blackListTitles
         self.start_linkedin(username, password)
-        self.phone_number = phone_number
 
     def get_appliedIDs(self, filename) -> list | None:
         try:
             df = pd.read_csv(filename,
-                             header=None,
+                             header=0,
                              names=['timestamp', 'jobID', 'job', 'company', 'attempted', 'result'],
                              lineterminator='\n',
                              encoding='utf-8')
@@ -474,8 +493,33 @@ class EasyApplyBot:
                 input_element = question.find_element(By.XPATH, f".//*[@id='{label.get_attribute('for')}']")
                 log.info(f"Input type: {input_element.tag_name}")
 
-                if "years" in label.text.lower():
-                    input_element.send_keys("5")
+                if "first name" in label.text.lower():
+                    input_element.send_keys(self.first_name)
+                elif "last name" in label.text.lower():
+                    input_element.send_keys(self.last_name)
+                elif "address" in label.text.lower():
+                    input_element.send_keys(self.address)
+                elif "city" in label.text.lower():
+                    input_element.send_keys(self.city)
+                elif "state" in label.text.lower():
+                    input_element.send_keys(self.state)
+                elif "zip" in label.text.lower():
+                    input_element.send_keys(self.zipcode)
+                elif "country" in label.text.lower():
+                    input_element.send_keys(self.country)
+
+                elif "mobile phone number" in label.text.lower():
+                    input_element.send_keys(self.phone_number)
+                elif "primary phone number" in label.text.lower():
+                    input_element.send_keys(self.phone_number)
+
+                elif "years" in label.text.lower():
+                    input_element.send_keys(self.experience)
+                elif "how long" in label.text.lower():
+                    input_element.send_keys(self.experience)
+                elif "salary" in label.text.lower():
+                    input_element.send_keys(self.salary)
+
                 elif input_element.tag_name == "select":
                     options = input_element.find_elements(By.TAG_NAME, "option")
                     for option in options:
@@ -486,12 +530,21 @@ class EasyApplyBot:
                     radio_buttons = question.find_elements(By.XPATH, ".//input[@type='radio']")
                     for radio_button in radio_buttons:
                         if radio_button.get_attribute("value").lower() == "yes":
-                            radio_button.click()
+                            # radio_button.click()
+                            # get sibling label
+                            label = radio_button.find_element(By.XPATH, "./following-sibling::label")
+                            label.click()
+                            break
+                        elif radio_button.get_attribute("value").lower() == "type":
+                            # radio_button.click()
+                            # get sibling label
+                            label = radio_button.find_element(By.XPATH, "./following-sibling::label")
+                            label.click()
                             break
                 else:
                     log.info(f"Skipping question: {label.text}")
 
-                time.sleep(random.uniform(4.5, 6.5))
+                time.sleep(random.uniform(2.0, 4.5))
             except Exception as e:
                 log.error(f"Error processing question: {str(e)}")
                 continue

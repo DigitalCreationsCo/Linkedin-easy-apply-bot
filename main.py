@@ -37,6 +37,10 @@ if __name__ == '__main__':
 
     bot = EasyApplyBot(parameters['username'],
                        parameters['password'],
+                       parameters['first_name'],
+                       parameters['last_name'],
+                       parameters['salary'],
+                       parameters['experience'],
                        parameters['phone_number'],
                        uploads=uploads,
                        filename=output_filename,

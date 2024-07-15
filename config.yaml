@@ -1,9 +1,20 @@
 username: bryantmejia242@gmail.com
-password: humanBeingExcellence2024
+password: bornBillionaire2024
 # username: art.bryantfeed@gmail.com
 # password: newaccount123
 # username: bmejia220@gmail.com
 # password: Krxpjhs)#JCD2ax
+
+first_name: Bryant
+last_name: Mejia
+salary: 195000
+experience: 5
+address:
+city: New York
+state: NY
+zipcode: 10011
+country: United States
+
 phone_number: 5707901185
 positions:
 - Senior Software Engineer
