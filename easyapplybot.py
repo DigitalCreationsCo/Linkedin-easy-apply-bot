@@ -493,63 +493,63 @@ class EasyApplyBot:
                 input_element = question.find_element(By.XPATH, f".//*[@id='{label.get_attribute('for')}']")
                 log.info(f"Input type: {input_element.tag_name}")
 
+                answer_provided = False
+
                 if "first name" in label.text.lower():
                     input_element.send_keys(self.first_name)
+                    answer_provided = True
                 elif "last name" in label.text.lower():
                     input_element.send_keys(self.last_name)
+                    answer_provided = True
                 elif "address" in label.text.lower():
                     input_element.send_keys(self.address)
+                    answer_provided = True
                 elif "city" in label.text.lower():
                     input_element.send_keys(self.city)
+                    answer_provided = True
                 elif "state" in label.text.lower():
                     input_element.send_keys(self.state)
+                    answer_provided = True
                 elif "zip" in label.text.lower():
                     input_element.send_keys(self.zipcode)
+                    answer_provided = True
                 elif "country" in label.text.lower():
                     input_element.send_keys(self.country)
-
-                elif "mobile phone number" in label.text.lower():
+                    answer_provided = True
+                elif "mobile phone number" in label.text.lower() or "primary phone number" in label.text.lower():
                     input_element.send_keys(self.phone_number)
-                elif "primary phone number" in label.text.lower():
-                    input_element.send_keys(self.phone_number)
-
-                elif "years" in label.text.lower():
+                    answer_provided = True
+                elif "years" in label.text.lower() or "how long" in label.text.lower():
                     input_element.send_keys(self.experience)
-                elif "how long" in label.text.lower():
-                    input_element.send_keys(self.experience)
+                    answer_provided = True
                 elif "salary" in label.text.lower():
                     input_element.send_keys(self.salary)
-
+                    answer_provided = True
                 elif input_element.tag_name == "select":
                     options = input_element.find_elements(By.TAG_NAME, "option")
                     for option in options:
                         if "yes" in option.text.lower():
                             option.click()
+                            answer_provided = True
                             break
                 elif input_element.tag_name == "input" and input_element.get_attribute("type") == "radio":
                     radio_buttons = question.find_elements(By.XPATH, ".//input[@type='radio']")
                     for radio_button in radio_buttons:
-                        if radio_button.get_attribute("value").lower() == "yes":
-                            # radio_button.click()
-                            # get sibling label
+                        if radio_button.get_attribute("value").lower() in ["yes", "type"]:
                             label = radio_button.find_element(By.XPATH, "./following-sibling::label")
                             label.click()
-                            break
-                        elif radio_button.get_attribute("value").lower() == "type":
-                            # radio_button.click()
-                            # get sibling label
-                            label = radio_button.find_element(By.XPATH, "./following-sibling::label")
-                            label.click()
+                            answer_provided = True
                             break
                 else:
                     log.info(f"Skipping question: {label.text}")
 
-                time.sleep(random.uniform(2.0, 4.5))
+                if answer_provided:
+                    time.sleep(random.uniform(2.0, 4.5))
+                    
             except Exception as e:
                 log.error(f"Error processing question: {str(e)}")
                 continue
-            
-            time.sleep(random.uniform(2.0, 4.5))
+
 
     def load_page(self, sleep=1):
         scroll_page = 0
