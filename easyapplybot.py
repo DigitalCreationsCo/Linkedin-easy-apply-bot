@@ -527,19 +527,27 @@ class EasyApplyBot:
                     answer_provided = True
                 elif input_element.tag_name == "select":
                     options = input_element.find_elements(By.TAG_NAME, "option")
+                    yes_selected = False
                     for option in options:
                         if "yes" in option.text.lower():
                             option.click()
-                            answer_provided = True
+                            yes_selected = True
                             break
+                    if not yes_selected and options:
+                        options[-1].click()  # Select the final option if 'yes' is not available
                 elif input_element.tag_name == "input" and input_element.get_attribute("type") == "radio":
                     radio_buttons = question.find_elements(By.XPATH, ".//input[@type='radio']")
+                    yes_selected = False
                     for radio_button in radio_buttons:
-                        if radio_button.get_attribute("value").lower() in ["yes", "type"]:
+                        if radio_button.get_attribute("value").lower() == "yes":
                             label = radio_button.find_element(By.XPATH, "./following-sibling::label")
                             label.click()
-                            answer_provided = True
+                            yes_selected = True
                             break
+                    if not yes_selected and radio_buttons:
+                        final_radio_button = radio_buttons[-1]
+                        final_label = final_radio_button.find_element(By.XPATH, "./following-sibling::label")
+                        final_label.click()  # Select the final option if 'yes' is not available
                 else:
                     log.info(f"Skipping question: {label.text}")
 
