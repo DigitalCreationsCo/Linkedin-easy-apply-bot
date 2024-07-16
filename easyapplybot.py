@@ -432,13 +432,14 @@ class EasyApplyBot:
 
                     time.sleep(random.uniform(4.5, 6.5))
 
+                self.answer_questions()
+
                 # Click Next or submit button if possible
                 button: None = None
                 buttons: list = [next_locater, review_locater, follow_locator,
                            submit_locater, submit_application_locator]
                 for i, button_locator in enumerate(buttons):
 
-                    self.answer_questions()
                 
                     if is_present(button_locator):
                         button: None = self.wait.until(EC.element_to_be_clickable(button_locator))
@@ -525,6 +526,11 @@ class EasyApplyBot:
                 elif "salary" in label.text.lower():
                     input_element.send_keys(self.salary)
                     answer_provided = True
+                
+                elif "how did you hear about" in label.text.lower():
+                    input_element.send_keys("LinkedIn")
+                    answer_provided = True
+
                 elif input_element.tag_name == "select":
                     options = input_element.find_elements(By.TAG_NAME, "option")
                     yes_selected = False
