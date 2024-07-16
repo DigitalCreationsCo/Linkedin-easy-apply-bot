@@ -266,7 +266,7 @@ class EasyApplyBot:
                             log.info("Clicking the EASY apply button")
                             button.click()
                             time.sleep(3)
-                            self.fill_out_phone_number()
+                            # self.fill_out_phone_number()
                             result: bool = self.send_resume()
                             count_application += 1
                     else:
@@ -351,6 +351,7 @@ class EasyApplyBot:
 
         if input_field:
             input_field.clear()
+            print(f"fill phone number: {self.phone_number}")
             input_field.send_keys(self.phone_number)
             time.sleep(random.uniform(4.5, 6.5))
         
@@ -492,46 +493,11 @@ class EasyApplyBot:
                 log.info(f"Answering question: {label.text}")
 
                 input_element = question.find_element(By.XPATH, f".//*[@id='{label.get_attribute('for')}']")
-                log.info(f"Input type: {input_element.tag_name}")
+                log.info(f"Input type: {input_element.get_attribute('type')}")
 
                 answer_provided = False
 
-                if "first name" in label.text.lower():
-                    input_element.send_keys(self.first_name)
-                    answer_provided = True
-                elif "last name" in label.text.lower():
-                    input_element.send_keys(self.last_name)
-                    answer_provided = True
-                elif "address" in label.text.lower():
-                    input_element.send_keys(self.address)
-                    answer_provided = True
-                elif "city" in label.text.lower():
-                    input_element.send_keys(self.city)
-                    answer_provided = True
-                elif "state" in label.text.lower():
-                    input_element.send_keys(self.state)
-                    answer_provided = True
-                elif "zip" in label.text.lower():
-                    input_element.send_keys(self.zipcode)
-                    answer_provided = True
-                elif "country" in label.text.lower():
-                    input_element.send_keys(self.country)
-                    answer_provided = True
-                elif "mobile phone number" in label.text.lower() or "primary phone number" in label.text.lower():
-                    input_element.send_keys(self.phone_number)
-                    answer_provided = True
-                elif "years" in label.text.lower() or "how long" in label.text.lower():
-                    input_element.send_keys(self.experience)
-                    answer_provided = True
-                elif "salary" in label.text.lower():
-                    input_element.send_keys(self.salary)
-                    answer_provided = True
-                
-                elif "how did you hear about" in label.text.lower():
-                    input_element.send_keys("LinkedIn")
-                    answer_provided = True
-
-                elif input_element.tag_name == "select":
+                if input_element.tag_name == "select":
                     options = input_element.find_elements(By.TAG_NAME, "option")
                     yes_selected = False
                     for option in options:
@@ -554,6 +520,74 @@ class EasyApplyBot:
                         final_radio_button = radio_buttons[-1]
                         final_label = final_radio_button.find_element(By.XPATH, "./following-sibling::label")
                         final_label.click()  # Select the final option if 'yes' is not available
+                        
+                elif "first name" in label.text.lower():
+                    answer = self.first_name
+                    print(f"asnwer: {answer}")
+                    input_element.clear()
+                    input_element.send_keys(answer)
+                    answer_provided = True
+                elif "last name" in label.text.lower():
+                    answer = self.last_name
+                    print(f"asnwer: {answer}")
+                    input_element.clear()
+                    input_element.send_keys(answer)
+                    answer_provided = True
+                elif "address" in label.text.lower():
+                    answer = self.address
+                    print(f"asnwer: {answer}")
+                    input_element.clear()
+                    input_element.send_keys(answer)
+                    answer_provided = True
+                elif "city" in label.text.lower():
+                    answer = self.city
+                    print(f"asnwer: {answer}")
+                    input_element.clear()
+                    input_element.send_keys(answer)
+                    answer_provided = True
+                elif "state" in label.text.lower():
+                    answer = self.state
+                    print(f"asnwer: {answer}")
+                    input_element.clear()
+                    input_element.send_keys(answer)
+                    answer_provided = True
+                elif "zip" in label.text.lower():
+                    answer = self.zipcode
+                    print(f"asnwer: {answer}")
+                    input_element.clear()
+                    input_element.send_keys(answer)
+                    answer_provided = True
+                elif "country" in label.text.lower():
+                    answer= self.country
+                    print(f"asnwer: {answer}")
+                    input_element.clear()
+                    input_element.send_keys(answer)
+                    answer_provided = True
+                elif "mobile phone number" in label.text.lower() or "primary phone number" in label.text.lower():
+                    answer = self.phone_number
+                    print(f"asnwer: {answer}")
+                    input_element.clear()
+                    input_element.send_keys(answer)
+                    answer_provided = True
+                elif "years" in label.text.lower() or "how long" in label.text.lower():
+                    answer = self.experience            
+                    print(f"asnwer: {answer}")
+                    input_element.clear()
+                    input_element.send_keys(answer)
+                    answer_provided = True
+                elif "salary" in label.text.lower():
+                    answer = self.salary
+                    print(f"asnwer: {answer}")
+                    input_element.clear()
+                    input_element.send_keys(answer)
+                    answer_provided = True
+                
+                elif "how did you hear about" in label.text.lower():
+                    answer = "LinkedIn"
+                    print(f"asnwer: {answer}")
+                    input_element.clear()
+                    input_element.send_keys(answer)
+                    answer_provided = True
                 else:
                     log.info(f"Skipping question: {label.text}")
 

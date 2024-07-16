@@ -18,6 +18,15 @@ if __name__ == '__main__':
     assert parameters['username'] is not None
     assert parameters['password'] is not None
     assert parameters['phone_number'] is not None
+    assert parameters['first_name'] is not None
+    assert parameters['last_name'] is not None
+    assert parameters['salary'] is not None
+    assert parameters['experience'] is not None
+    # assert parameters['address'] is not None
+    assert parameters['city'] is not None
+    assert parameters['state'] is not None
+    # assert parameters['zipcode'] is not None
+    assert parameters['country'] is not None
 
     if 'uploads' in parameters.keys() and type(parameters['uploads']) == list:
         raise Exception("uploads read from the config file appear to be in list format" +
